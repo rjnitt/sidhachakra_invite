@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Jain Invitation Personalizer</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <script type="module" src="/static/js/app.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <p class="eyebrow">सादर आमंत्रण</p>
+    <h1>Jain Invitation Personalizer</h1>
+    <p>Personalize your invitation in Hindi or English.</p>
+  </header>
+  <main>
+    <nav class="mode-switch" aria-label="Invitation mode" hidden>
+      <button id="single-mode" type="button" aria-pressed="true" aria-controls="single-panel">Single invitation</button>
+      <button id="bulk-mode" type="button" aria-pressed="false" aria-controls="bulk-panel">Bulk invitations</button>
+    </nav>
+    <div id="bulk-panel" class="workspace" hidden>
+      <section class="card form-card" aria-labelledby="bulk-title">
+        <h2 id="bulk-title">Bulk invitations</h2>
+        <p>Upload one worksheet with the columns Name, Second_Line, City. Maximum 100 data rows and 5 MB.</p>
+        <a href="/api/invitations/bulk/template" download="Recipients_Example.xlsx">Download example spreadsheet</a>
+        <label for="bulk-file">Excel workbook (.xlsx)</label>
+        <input id="bulk-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" aria-describedby="bulk-help">
+        <small id="bulk-help">Blank names are skipped. Use plain text cells, not formulas. All data rows count toward the limit.</small>
+        <small>A 100-invitation ZIP can exceed 80 MB with this template.</small>
+        <div class="actions bulk-actions">
+          <button id="bulk-validate" type="button" class="secondary" disabled>Validate &amp; review samples</button>
+          <button id="bulk-generate" type="button" disabled>Generate all &amp; download ZIP</button>
+        </div>
+        <p id="bulk-status" role="status" aria-live="polite">Choose a workbook to begin.</p>
+        <p id="bulk-error" class="error-state" role="alert" hidden></p>
+        <dl id="bulk-summary" class="batch-summary" aria-label="Batch summary" hidden></dl>
+        <div id="bulk-issues" hidden>
+          <h3>Rows needing attention</h3>
+          <ul id="bulk-issue-list"></ul>
+        </div>
+        <div id="bulk-download-panel" class="download-panel" hidden>
+          <p>Your ZIP is ready. If it did not download automatically:</p>
+          <a id="bulk-download" class="button-link" download="Invitations_Batch.zip">Download ZIP</a>
+          <small>Includes individual PDFs and a summary.json report. On iPhone/iPad, use Share &gt; Save to Files if needed.</small>
+        </div>
+      </section>
+      <section class="preview-card" aria-labelledby="bulk-preview-title">
+        <h2 id="bulk-preview-title">Sample previews</h2>
+        <p id="bulk-preview-empty">Validate your workbook to review sample invitations before generating the batch.</p>
+        <div id="bulk-samples" hidden>
+          <label for="bulk-sample-select">Sample recipient</label>
+          <select id="bulk-sample-select"></select>
+          <p id="bulk-sample-text" class="sample-text"></p>
+          <div class="preview-heading">
+            <button id="bulk-verify" type="button" class="secondary" disabled>Check exact sample</button>
+            <span id="bulk-preview-kind">Live · approximate</span>
+          </div>
+          <div class="preview-stage bulk-stage">
+            <img id="bulk-template-image" src="/api/template/preview" width="971" height="1363" alt="Original invitation first page for bulk sample" decoding="async">
+            <canvas id="bulk-text-overlay" class="page-overlay" aria-hidden="true"></canvas>
+            <img id="bulk-exact-image" class="page-overlay" alt="Exact personalized sample first page" hidden>
+          </div>
+          <small>Samples include a longest valid name. Only Page 1 changes; Pages 2–4 stay unchanged.</small>
+        </div>
+      </section>
+    </div>
+    <div id="single-panel" class="workspace">
+      <section class="card form-card" aria-labelledby="recipient-title">
+        <h2 id="recipient-title">Recipient details</h2>
+        <p id="form-help">Spelling is preserved. No titles or surnames are added.</p>
+        <form id="recipient-form" aria-describedby="form-help">
+          <label for="name">Name <span aria-hidden="true">*</span> <span lang="hi">/ नाम</span></label>
+          <input id="name" name="name" type="text" required maxlength="500" autocomplete="off" spellcheck="false">
+          <label for="second-line">Second line <span class="optional">(optional)</span></label>
+          <input id="second-line" name="second_line" type="text" maxlength="500" autocomplete="off" spellcheck="false" aria-describedby="second-help">
+          <small id="second-help">Designation, another name, or other details.</small>
+          <label for="city">City / Location <span class="optional">(optional)</span></label>
+          <input id="city" name="city" type="text" maxlength="500" autocomplete="off" spellcheck="false" aria-describedby="city-help">
+          <small id="city-help">Appears on the next populated row, even when Second line is empty.</small>
+          <p class="note">Fixed 16 pt maroon text. No wrapping or shrinking. Shorten overlong entries manually.</p>
+          <div class="actions">
+            <button id="verify" type="button" class="secondary" disabled>Check exact preview</button>
+            <button id="generate" type="submit" disabled>Generate &amp; download PDF</button>
+          </div>
+          <p id="status" role="status" aria-live="polite">Loading invitation preview…</p>
+          <p id="error" role="alert" hidden></p>
+          <div id="download-panel" class="download-panel" hidden>
+            <p>Your four-page PDF is ready. If it did not download automatically:</p>
+            <a id="download" class="button-link">Download PDF</a>
+            <a id="open-pdf" target="_blank" rel="noopener">Open PDF in a new tab</a>
+            <small>On iPhone or iPad, use Share → Save to Files if Safari opens the PDF.</small>
+          </div>
+        </form>
+        <noscript>JavaScript is required for live preview and PDF downloads.</noscript>
+      </section>
+      <section class="card preview-card" aria-labelledby="preview-title">
+        <div class="preview-heading"><h2 id="preview-title">First-page preview</h2><span id="preview-kind">Live · approximate</span></div>
+        <p id="preview-help">Updates as you type. Use “Check exact preview” to verify the final PDF alignment.</p>
+        <div id="preview-stage" class="preview-stage" aria-busy="true">
+          <img id="template-image" src="/api/template/preview" alt="Original invitation first page" width="971" height="1363" decoding="async">
+          <canvas id="text-overlay" aria-hidden="true"></canvas>
+          <img id="exact-image" alt="Exact personalized first-page preview" hidden>
+        </div>
+        <p id="preview-text" class="sr-only" aria-live="polite"></p>
+        <small>Only recipient information on Page 1 changes. Pages 2–4 remain unchanged.</small>
+      </section>
+    </div>
+  </main>
+  <footer>No account required. Recipient details and generated PDFs are not stored.</footer>
+</body>
+</html>

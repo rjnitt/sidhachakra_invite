@@ -1,0 +1,23 @@
+{
+  "status": "placement_approved",
+  "template_sha256": "365791e39f67966034ad36df5ecc14d6af1d50405ba47c968e1f7e0fe494548f",
+  "page": 1,
+  "coordinate_system": "pdf_points",
+  "origin": "top_left",
+  "page_width": 647.030029296875,
+  "page_height": 908.0499877929688,
+  "text_box": {
+    "x": 202,
+    "y": 614,
+    "width": 235,
+    "height": 90
+  },
+  "alignment": "center",
+  "vertical_alignment": "writing_rows",
+  "color": "#800020",
+  "font_family": "Noto Sans Devanagari",
+  "font_size": 16,
+  "minimum_font_size": 16,
+  "line_spacing": 2.04,
+  "excluded_y_ranges": [[638.7, 642.0], [671.3, 674.7], [704.0, 706.3]]
+}

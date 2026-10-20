@@ -1,0 +1,1289 @@
+# JAIN INVITATION PERSONALIZER
+## Master Product Requirements Document (PRD) & AI Development Instructions
+
+**Version:** 3.0  
+**Status:** Requirements finalized; development not started  
+**Development Environment:** Visual Studio Code / Visual Studio IDE  
+**Deployment Target:** Render  
+**Application Type:** Mobile-first responsive web application  
+**Primary Languages:** Hindi and English  
+**Backend:** Python / FastAPI  
+**Frontend:** HTML5, CSS3, Vanilla JavaScript  
+**Core Function:** Generate personalized four-page PDF invitations from a static PDF template.
+
+---
+
+# PART 1 — MASTER INSTRUCTIONS FOR THE CODING ASSISTANT
+
+You are acting as a Senior Full-Stack Python Engineer, PDF Processing Specialist, and Technical Architect.
+
+Build a production-oriented web application called **Jain Invitation Personalizer**.
+
+The application will personalize an existing four-page Jain religious invitation PDF.
+
+Only the recipient information on the FIRST page may change. Pages 2, 3, and 4 must retain their original content and visual quality.
+
+The application must support:
+
+1. Single invitation generation using a manual entry form.
+2. Bulk invitation generation from an Excel file containing up to 100 recipients.
+3. Hindi, English, and mixed-language recipient information.
+4. Three independent recipient fields.
+5. Optional second and third fields.
+6. Automatic text fitting and wrapping.
+7. Center-aligned maroon text.
+8. Live first-page preview.
+9. Direct PDF downloads on mobile devices.
+10. Bulk ZIP downloads.
+11. Public access without authentication.
+12. Deployment to Render.
+13. No database and no permanent generated-file storage.
+
+## Critical Development Rules
+
+- Do not redesign or recreate the invitation PDF.
+- Never modify the original PDF template in place.
+- Do not change the religious text, dates, names, images, graphics, or existing typography.
+- Do not use AI image generation.
+- Do not use paid APIs.
+- Do not introduce unnecessary infrastructure.
+- Preserve recipient text exactly as supplied.
+- Never automatically add श्री, श्रीमती, जैन, or other honorifics.
+- Never automatically translate or transliterate names.
+- Ensure correct Devanagari shaping and font embedding.
+- Ensure PDF generation works on Render's Linux environment.
+- Implement and test one phase at a time.
+- Do not claim a phase is complete until its acceptance tests pass.
+- Do not assume the exact text coordinates until the original PDF has been inspected.
+- If a technical limitation prevents a requirement, explain it and propose the smallest practical alternative before changing the design.
+
+---
+
+# PART 2 — PRODUCT OVERVIEW
+
+## 2.1 Problem Statement
+
+The user has a finalized four-page invitation PDF for a Jain religious event.
+
+The user needs to invite approximately 100 people, each with different recipient information.
+
+Manually editing the PDF 100 times is inefficient.
+
+The user also wants to generate additional personalized invitations in the future from any mobile phone.
+
+## 2.2 Proposed Solution
+
+Create a publicly accessible web application that allows the user to:
+
+- Enter recipient information manually.
+- Preview the personalized first page.
+- Generate the complete four-page PDF.
+- Automatically download the PDF.
+- Upload an Excel file containing up to 100 recipients.
+- Generate individual PDFs for every valid Excel record.
+- Download all generated PDFs as a ZIP archive.
+
+## 2.3 Product Goals
+
+**Primary goal:** Generate professional personalized invitation PDFs without manually editing the source PDF.
+
+**Secondary goals:**
+
+- Support any modern mobile browser.
+- Minimize hosting costs.
+- Keep the implementation simple.
+- Maintain exact spelling of names.
+- Support reusable single-entry and bulk workflows.
+- Keep the application maintainable and deployable through GitHub and Render.
+
+## 2.4 Non-Goals
+
+The first release must NOT include:
+
+- User registration or login.
+- Payment integration.
+- WhatsApp message automation.
+- Email sending.
+- Dynamic PDF template uploads.
+- Multiple invitation templates.
+- Online PDF editing.
+- AI-based image generation.
+- Historical invitation storage.
+- Invitation ID tracking.
+- Database integration.
+- Automatic translation.
+- Automatic honorific or surname insertion.
+- Changes to pages 2–4.
+
+---
+
+# PART 3 — FUNCTIONAL REQUIREMENTS
+
+## FR-01: Static PDF Template
+
+The application will use one predefined four-page PDF file.
+
+Expected location:
+
+`assets/invitation.pdf`
+
+The PDF will be bundled with the application during deployment.
+
+Requirements:
+
+- Verify that the template exists during application startup.
+- Verify that the PDF contains exactly four pages.
+- Detect the dimensions and rotation of the first page.
+- Preserve the source PDF's page dimensions.
+- Never overwrite the source file.
+- Add recipient information only to the first page.
+- Retain the original content of all four pages.
+
+The template is changed only through a code/configuration update and redeployment.
+
+## FR-02: Single Invitation Mode
+
+The application must provide a mobile-friendly form with three fields.
+
+### Field 1: Name
+
+- Required.
+- Supports Hindi.
+- Supports English.
+- Supports mixed Hindi and English.
+- Supports punctuation and honorifics.
+- Must preserve the entered spelling.
+
+Examples:
+
+`श्री सुरेन्द्र कुमार जैन`
+
+`श्रीमती आशा–राजेन्द्र मोदी`
+
+`Mr. Rohit Jain`
+
+### Field 2: Second Line
+
+Optional free-text field.
+
+Can contain:
+
+- Designation.
+- Alias.
+- Second person's name.
+- Relationship information.
+- Additional recipient details.
+
+Examples:
+
+`अध्यक्ष, दिगम्बर जैन समाज`
+
+`श्री राजेन्द्र कुमार जैन`
+
+`President, Jain Samaj`
+
+If empty, the line must not occupy vertical space.
+
+### Field 3: City / Location
+
+Optional free-text field.
+
+Examples:
+
+`जबलपुर`
+
+`मोहनगढ़ खास`
+
+`इंदौर, मध्य प्रदेश`
+
+`New Delhi`
+
+If empty, the line must not occupy vertical space.
+
+### Form Behavior
+
+- Generate is disabled when Name is empty.
+- Optional fields may remain empty.
+- Provide clear validation errors.
+- Display loading feedback during PDF generation.
+- Support direct download after successful generation.
+- Keep the form values after download so users can make corrections.
+
+## FR-03: Recipient Text Formatting
+
+All populated fields must follow the same base typography.
+
+Required formatting:
+
+- Horizontal alignment: Center.
+- Vertical alignment: Entire text group centered within a predefined rectangle.
+- Text color: Maroon.
+- Initial suggested color: `#800020`.
+- Font size: Equal for all populated fields.
+- Optional lines: Removed from layout when empty.
+- Text effects: None.
+- Background: Transparent.
+- Extra heading: None.
+
+The actual font size and rectangle dimensions must be finalized after PDF inspection.
+
+## FR-04: Dynamic Text Layout Engine
+
+The application must support different name lengths.
+
+Layout algorithm:
+
+1. Read the three input fields.
+2. Preserve the original input text.
+3. Remove optional empty fields from the layout.
+4. Shape the text using a Devanagari-compatible rendering engine.
+5. Measure the actual rendered text.
+6. Attempt to fit the text at the configured default font size.
+7. If the text is too wide, reduce the shared font size.
+8. If still too wide, wrap at appropriate word boundaries.
+9. Recalculate the total text-group height.
+10. Center the entire group vertically.
+11. Center every rendered line horizontally.
+12. Validate that the group fits inside the configured rectangle.
+
+### Long Name Handling
+
+The system must never silently crop or truncate names.
+
+If the text cannot fit:
+
+- Use the minimum permitted font size.
+- Generate a warning.
+- Continue processing according to the agreed batch behavior.
+- Mark the affected invitation in the generation summary.
+- Prefer a visibly readable result; never silently produce clipped text.
+
+If content cannot be rendered safely within the rectangle, return a clear layout error for that record rather than producing a corrupted invitation.
+
+### Shared Font Size
+
+All three fields must use the same font size within a particular invitation.
+
+The font size may vary between different invitations depending on content length.
+
+## FR-05: Hindi and English Rendering
+
+Correct Devanagari rendering is a critical requirement.
+
+Support:
+
+- Hindi names.
+- English names.
+- Mixed-language names.
+- Matras.
+- Conjunct characters.
+- Unicode punctuation.
+- Long and short names.
+
+Test strings must include:
+
+`श्रीमती`
+
+`सुरेन्द्र`
+
+`क्षेत्र`
+
+`प्रज्ञा`
+
+`श्रद्धा`
+
+`जिनेन्द्र`
+
+`श्री 1008`
+
+Use a compatible bundled font such as Noto Sans Devanagari, subject to font licensing and visual validation.
+
+The implementation must use proper complex-script shaping.
+
+**Do not assume that a simple PDF `insert_text()` call provides correct Hindi shaping.**
+
+A viable approach is to use a HarfBuzz-compatible shaping engine through Qt/Pango or another suitable rendering layer and composite the correctly shaped output into the PDF.
+
+Choose a technique that supports both correct visual rendering and the required PDF quality.
+
+Where practical, prefer embedded searchable text. If a rasterized text overlay is necessary for reliable Devanagari rendering, limit rasterization to the personalized text overlay, not the complete PDF pages.
+
+## FR-06: Live Preview
+
+The first page must be displayed in the browser.
+
+Preview requirements:
+
+- Show the original first page.
+- Overlay the entered recipient information.
+- Update as the user types.
+- Maintain correct proportions on mobile screens.
+- Support Hindi and English.
+- Use the same logical text boundaries as PDF generation.
+- Display the full first page, not only the text area.
+
+### Preview Architecture
+
+Use a pre-rendered preview image of the first page.
+
+The browser overlays the text using normalized coordinates derived from the PDF layout configuration.
+
+Avoid sending a backend request for every keystroke.
+
+However, the final PDF renderer is authoritative.
+
+If browser and backend font metrics differ, provide a server-generated verification preview before final generation or adjust the shared rendering strategy.
+
+The final output must match the approved preview within defined visual tolerances.
+
+## FR-07: Single PDF Generation
+
+When Generate is clicked:
+
+1. Validate the form.
+2. Send the recipient information to the backend.
+3. Load the original PDF template.
+4. Apply the personalized text overlay to Page 1.
+5. Preserve Pages 2–4.
+6. Generate the final four-page PDF.
+7. Return the PDF as a downloadable response.
+8. Trigger the browser download.
+9. Provide a fallback download action when necessary.
+
+Filename format:
+
+`Invitation_<Name>.pdf`
+
+Example:
+
+`Invitation_श्री_सुरेन्द्र_कुमार_जैन.pdf`
+
+Use filesystem-safe filename handling without changing the displayed recipient name.
+
+## FR-08: Bulk Excel Mode
+
+The application must accept Excel `.xlsx` files.
+
+Required column headers:
+
+| Name | Second_Line | City |
+|---|---|---|
+| श्री सुरेन्द्र कुमार जैन | अध्यक्ष, जैन समाज | जबलपुर |
+| श्री भूपेन्द्र जैन | | सागर |
+| श्रीमती आशा–राजेन्द्र मोदी | | इंदौर |
+
+### Processing Rules
+
+- Maximum 100 data rows per batch.
+- Name is mandatory for generating an invitation.
+- Second_Line is optional.
+- City is optional.
+- Skip rows with empty Name.
+- Preserve text exactly.
+- Do not modify the uploaded Excel file.
+- Do not perform automatic spelling corrections.
+- Treat formula cells carefully; do not execute formulas or macros.
+- Reject unsupported or malformed Excel files.
+- Prevent excessively large uploads.
+
+The maximum batch limit must not be bypassed by adding blank rows or unusual spreadsheet structures.
+
+## FR-09: Bulk Preview
+
+Before generating all PDFs:
+
+- Parse and validate the Excel file.
+- Show total rows and valid recipients.
+- Display 3–5 representative sample invitations.
+- Include long-name cases where available.
+- Display validation warnings.
+- Provide Generate All confirmation.
+
+## FR-10: Bulk PDF Generation
+
+For each valid recipient:
+
+1. Load or safely reuse the immutable original template.
+2. Generate a new personalized PDF.
+3. Preserve all four pages.
+4. Assign a unique filename.
+5. Add the PDF to a ZIP archive.
+
+### Duplicate Filenames
+
+If two recipients produce the same filename, use:
+
+`Invitation_श्री_सुरेन्द्र_जैन.pdf`
+
+`Invitation_श्री_सुरेन्द्र_जैन_2.pdf`
+
+`Invitation_श्री_सुरेन्द्र_जैन_3.pdf`
+
+Never overwrite another recipient's output.
+
+## FR-11: Bulk ZIP Download
+
+The final ZIP should contain all successfully generated individual PDFs.
+
+Example:
+
+`Invitations_Batch.zip`
+
+ZIP structure:
+
+`Invitation_श्री_सुरेन्द्र_जैन.pdf`
+
+`Invitation_श्री_भूपेन्द्र_जैन.pdf`
+
+`Invitation_श्रीमती_आशा_राजेन्द्र_मोदी.pdf`
+
+Use standard ZIP compression compatible with Android, iOS, macOS, and Windows.
+
+## FR-12: Generation Summary
+
+After bulk processing, display:
+
+- Total Excel rows.
+- Valid recipients.
+- Successfully generated PDFs.
+- Skipped rows.
+- Records with layout warnings.
+- Failed records.
+- ZIP download status.
+
+Example:
+
+Total rows: 100  
+Generated: 97  
+Skipped: 2  
+Failed: 1  
+Layout warnings: 3
+
+Warnings must not stop unrelated valid records from processing.
+
+## FR-13: File Storage
+
+Generated files must not be permanently stored on the server.
+
+Requirements:
+
+- Use in-memory processing where practical.
+- Use temporary files when necessary.
+- Remove temporary files after processing.
+- Do not store recipient names in a database.
+- Do not expose generated files through public static directories.
+- Do not rely on Render's local filesystem for persistence.
+
+The original PDF template remains bundled with the application.
+
+## FR-14: Public Access
+
+The website must be accessible without login.
+
+Requirements:
+
+- Public HTTPS URL.
+- Mobile and desktop access.
+- No account creation.
+- No authentication for MVP.
+- Basic rate limiting.
+- Excel upload validation.
+- Maximum 100 recipients per batch.
+- Request size limits.
+- Safe error handling.
+
+---
+
+# PART 4 — NON-FUNCTIONAL REQUIREMENTS
+
+## NFR-01: Mobile Compatibility
+
+Support current versions of:
+
+- Android Chrome.
+- iPhone Safari.
+- Desktop Chrome.
+- Desktop Safari.
+- Microsoft Edge.
+
+The layout must adapt to mobile screen widths without horizontal scrolling.
+
+## NFR-02: Performance
+
+Performance targets, subject to Render free-tier resource constraints:
+
+- Initial page load: Target under 3 seconds when the service is warm.
+- Live text preview: Responsive during typing.
+- Single PDF generation: Target under 5 seconds after warm-up.
+- Bulk generation: Process up to 100 invitations within practical hosting limits.
+
+Do not guarantee these timings before benchmarking.
+
+Render free services may experience cold starts.
+
+## NFR-03: PDF Quality
+
+- Preserve original page dimensions.
+- Preserve original vector graphics and embedded images.
+- Avoid rasterizing complete pages.
+- Maintain readable personalized text.
+- Preserve Pages 2–4 without visual alteration.
+- Do not introduce unnecessary PDF compression.
+
+## NFR-04: Reliability
+
+- One failed Excel record must not fail the entire batch.
+- Return meaningful error messages.
+- Avoid memory leaks.
+- Handle malformed files.
+- Clean up temporary resources.
+- Avoid filename collisions.
+
+## NFR-05: Security
+
+Implement:
+
+- Input validation.
+- Maximum field lengths.
+- Excel file size limits.
+- Rate limiting.
+- Safe filenames.
+- Path traversal prevention.
+- No shell execution using user input.
+- No formula execution.
+- No permanent sensitive-data logging.
+- Restricted CORS configuration.
+- Generic production error responses.
+- Protection against excessive concurrent PDF generation.
+
+Because the site is public, server-side controls must be enforced independently of frontend validation.
+
+## NFR-06: Privacy
+
+- No database.
+- No historical invitation records.
+- No recipient analytics.
+- No third-party AI API calls.
+- No permanent uploaded Excel storage.
+- No permanent generated PDF storage.
+
+Application logs must not contain full recipient names or uploaded spreadsheet contents.
+
+---
+
+# PART 5 — TECHNICAL ARCHITECTURE
+
+## 5.1 Frontend
+
+Use:
+
+- HTML5.
+- CSS3.
+- Vanilla JavaScript.
+
+Do not introduce React, Next.js, or a complex frontend build pipeline unless a clear technical need emerges.
+
+### Frontend Responsibilities
+
+- Render the mobile interface.
+- Collect recipient information.
+- Validate required fields.
+- Show live preview.
+- Upload Excel files.
+- Display bulk samples.
+- Display loading and error states.
+- Trigger PDF and ZIP downloads.
+
+## 5.2 Backend
+
+Use Python and FastAPI.
+
+Responsibilities:
+
+- Validate requests.
+- Parse Excel files.
+- Process recipient text.
+- Generate personalized PDFs.
+- Package ZIP archives.
+- Stream downloadable responses.
+- Enforce server-side security limits.
+
+## 5.3 PDF Engine
+
+Recommended starting library: PyMuPDF.
+
+Responsibilities:
+
+- Load the original PDF.
+- Read page dimensions.
+- Apply the personalized text overlay.
+- Preserve original pages.
+- Produce the final PDF.
+
+Implement the text-rendering layer separately so it can be changed without rewriting the entire PDF engine.
+
+## 5.4 Text Layout Engine
+
+Create a dedicated module responsible for:
+
+- Unicode text handling.
+- Font selection.
+- Complex-script shaping.
+- Text measurement.
+- Line wrapping.
+- Shared font sizing.
+- Horizontal alignment.
+- Vertical centering.
+- Overflow detection.
+- Warning generation.
+
+This module must be independently testable.
+
+## 5.5 Excel Engine
+
+Use openpyxl.
+
+Responsibilities:
+
+- Read workbook data.
+- Validate column headers.
+- Validate record limits.
+- Parse optional fields.
+- Skip blank names.
+- Return structured records and warnings.
+
+## 5.6 ZIP Engine
+
+Use Python's standard `zipfile` library.
+
+Responsibilities:
+
+- Package generated PDFs.
+- Prevent duplicate ZIP entry names.
+- Return the ZIP as a downloadable response.
+- Release temporary resources.
+
+---
+
+# PART 6 — API DESIGN
+
+Use `/api` as the API prefix.
+
+## Endpoint 1: Health Check
+
+`GET /api/health`
+
+Purpose:
+
+Verify application availability and template readiness.
+
+Expected response:
+
+```json
+{
+  "status": "ok",
+  "template_loaded": true
+}
+```
+
+Do not expose internal server paths.
+
+## Endpoint 2: Template Preview
+
+`GET /api/template/preview`
+
+Returns a preview image of the original first page.
+
+The image must be generated from the actual bundled PDF.
+
+## Endpoint 3: Layout Configuration
+
+`GET /api/template/layout`
+
+Returns public rendering configuration required for the browser preview.
+
+Example:
+
+```json
+{
+  "page": 1,
+  "coordinate_system": "normalized",
+  "text_box": {
+    "x": null,
+    "y": null,
+    "width": null,
+    "height": null
+  },
+  "alignment": "center",
+  "vertical_alignment": "center",
+  "color": "#800020",
+  "font_size": null,
+  "minimum_font_size": null
+}
+```
+
+The null values must be replaced after actual PDF calibration.
+
+## Endpoint 4: Single Generation
+
+`POST /api/invitations/single`
+
+Request:
+
+```json
+{
+  "name": "श्री सुरेन्द्र कुमार जैन",
+  "second_line": "अध्यक्ष, जैन समाज",
+  "city": "जबलपुर"
+}
+```
+
+Response:
+
+- `application/pdf`
+- Four-page personalized PDF.
+- Download filename in the Content-Disposition header.
+
+## Endpoint 5: Bulk Validation
+
+`POST /api/invitations/bulk/validate`
+
+Input:
+
+Excel `.xlsx` file.
+
+Response:
+
+- Total rows.
+- Valid records.
+- Skipped records.
+- Warnings.
+- Representative preview records.
+
+No permanent file storage.
+
+## Endpoint 6: Bulk Generation
+
+`POST /api/invitations/bulk/generate`
+
+Input:
+
+Excel `.xlsx` file.
+
+Response:
+
+- `application/zip`
+- Individual four-page PDFs.
+
+Generation summary can be included in the ZIP as a small JSON or text manifest, or communicated through appropriate response metadata.
+
+Do not require a persistent job ID.
+
+For Render's free-tier limits, benchmark the synchronous approach first. If it cannot reliably process 100 records, propose a stateless chunked-download workflow before introducing a database or persistent job queue.
+
+---
+
+# PART 7 — DATA MODEL
+
+## Recipient
+
+Fields:
+
+- `name`: string, required.
+- `second_line`: string, optional.
+- `city`: string, optional.
+
+All three fields support Unicode.
+
+## Generation Result
+
+Fields:
+
+- Recipient reference within the current request.
+- Generated filename.
+- Status.
+- Layout warnings.
+- Error message, if any.
+
+## Layout Configuration
+
+Fields:
+
+- PDF page number.
+- Text rectangle coordinates.
+- Base font size.
+- Minimum font size.
+- Font path.
+- Font color.
+- Horizontal alignment.
+- Vertical alignment.
+- Line spacing.
+- Text wrapping behavior.
+
+No persistent database models are required.
+
+---
+
+# PART 8 — PROJECT STRUCTURE
+
+Use the following proposed structure:
+
+```text
+jain-invitation-personalizer/
+|
+|-- app/
+|   |-- __init__.py
+|   |-- main.py
+|   |-- api/
+|   |   |-- __init__.py
+|   |   |-- routes.py
+|   |-- services/
+|   |   |-- pdf_service.py
+|   |   |-- text_layout_service.py
+|   |   |-- excel_service.py
+|   |   |-- zip_service.py
+|   |-- models/
+|   |   |-- schemas.py
+|   |-- core/
+|       |-- config.py
+|       |-- security.py
+|
+|-- assets/
+|   |-- invitation.pdf
+|   |-- fonts/
+|
+|-- frontend/
+|   |-- index.html
+|   |-- css/
+|   |   |-- styles.css
+|   |-- js/
+|       |-- app.js
+|       |-- preview.js
+|
+|-- config/
+|   |-- layout.json
+|
+|-- tests/
+|   |-- test_pdf.py
+|   |-- test_layout.py
+|   |-- test_excel.py
+|   |-- test_api.py
+|   |-- test_security.py
+|
+|-- requirements.txt
+|-- render.yaml
+|-- .gitignore
+|-- README.md
+```
+
+Keep responsibilities separated.
+
+Avoid placing all business logic inside `main.py`.
+
+---
+
+# PART 9 — IMPLEMENTATION PHASES
+
+## PHASE 0 — Project Initialization
+
+### Tasks
+
+1. Create the project directory.
+2. Initialize Git.
+3. Create a Python virtual environment.
+4. Set up FastAPI.
+5. Create the project structure.
+6. Add development dependencies.
+7. Create a basic health endpoint.
+8. Configure local development.
+9. Prepare a Render-compatible startup command.
+
+### Deliverables
+
+- Running local FastAPI application.
+- Health endpoint.
+- Initial README.
+- Dependency file.
+
+### Acceptance Criteria
+
+- Application starts locally.
+- Health endpoint responds.
+- No unnecessary services are required.
+
+**Stop and request approval before Phase 1.**
+
+---
+
+## PHASE 1 — PDF Inspection & Calibration
+
+### Prerequisite
+
+The user must provide the original four-page PDF.
+
+### Tasks
+
+1. Load the PDF.
+2. Verify the page count.
+3. Extract page dimensions.
+4. Detect page rotation.
+5. Render a first-page preview.
+6. Identify the recipient text area.
+7. Calibrate the bounding rectangle.
+8. Establish initial typography values.
+9. Save configuration in `layout.json`.
+
+### Deliverables
+
+- First-page preview.
+- Calibration configuration.
+- PDF inspection report.
+
+### Acceptance Criteria
+
+- Original PDF remains unchanged.
+- The text rectangle is within page boundaries.
+- Coordinates map correctly to the preview.
+- User approves the recipient text placement.
+
+**Do not invent PDF coordinates.**
+
+---
+
+## PHASE 2 — Unicode Text Rendering Engine
+
+### Tasks
+
+1. Bundle a compatible Devanagari font.
+2. Implement complex-script shaping.
+3. Implement Unicode text measurement.
+4. Implement line wrapping.
+5. Implement shared font-size reduction.
+6. Implement optional-line collapsing.
+7. Implement vertical centering.
+8. Implement overflow warnings.
+9. Test Hindi and English samples.
+
+### Deliverables
+
+- Independent text layout service.
+- Rendering test samples.
+- Automated layout tests.
+
+### Acceptance Criteria
+
+- Hindi matras render correctly.
+- Conjunct characters render correctly.
+- English and mixed-language names work.
+- All populated fields share the same font size.
+- No text exceeds the configured rectangle.
+- Empty optional lines do not reserve space.
+
+---
+
+## PHASE 3 — PDF Generation Engine
+
+### Tasks
+
+1. Load the static PDF template.
+2. Create a personalized text overlay.
+3. Apply the overlay only to Page 1.
+4. Preserve Pages 2–4.
+5. Export a four-page PDF.
+6. Implement safe filename generation.
+7. Implement duplicate filename handling.
+8. Validate output integrity.
+
+### Deliverables
+
+- Working PDF generation service.
+- Sample four-page PDFs.
+- PDF validation tests.
+
+### Acceptance Criteria
+
+- Generated PDF contains exactly four pages.
+- Recipient text appears in the correct area.
+- Original template is never overwritten.
+- Pages 2–4 remain visually identical to the source.
+- Text is not clipped or distorted.
+
+---
+
+## PHASE 4 — Single Entry API
+
+### Tasks
+
+1. Create recipient request validation.
+2. Implement the single-generation endpoint.
+3. Connect it to the PDF engine.
+4. Return a downloadable PDF.
+5. Implement error handling.
+6. Add API tests.
+
+### Deliverables
+
+- Working single-generation API.
+- Validation tests.
+- Downloadable personalized PDF.
+
+### Acceptance Criteria
+
+- Valid input generates a PDF.
+- Missing Name returns a validation error.
+- Optional fields work correctly.
+- Hindi and English names are preserved.
+- Correct filename is returned.
+
+---
+
+## PHASE 5 — Mobile Frontend & Live Preview
+
+### Tasks
+
+1. Create a responsive page layout.
+2. Add Single and Bulk mode navigation.
+3. Build the three-field form.
+4. Display the original first-page preview.
+5. Implement live text overlay.
+6. Synchronize preview coordinates.
+7. Add Generate button.
+8. Add loading and error states.
+9. Implement automatic download.
+10. Add manual download fallback.
+
+### Deliverables
+
+- Working mobile-first frontend.
+- Live first-page preview.
+- End-to-end single invitation generation.
+
+### Acceptance Criteria
+
+- Works on mobile screen widths.
+- Text preview updates while typing.
+- Generate triggers a PDF download.
+- No horizontal overflow.
+- Preview and generated PDF alignment are acceptably consistent.
+
+---
+
+## PHASE 6 — Excel Bulk Processing
+
+### Tasks
+
+1. Implement `.xlsx` upload.
+2. Validate Excel headers.
+3. Parse recipient records.
+4. Skip blank Name rows.
+5. Enforce the 100-recipient limit.
+6. Display 3–5 sample previews.
+7. Generate individual PDFs.
+8. Handle duplicate filenames.
+9. Package PDFs into ZIP.
+10. Display generation summary.
+
+### Deliverables
+
+- Bulk Excel upload interface.
+- Bulk validation endpoint.
+- ZIP generation endpoint.
+- Summary report.
+
+### Acceptance Criteria
+
+- A valid 100-recipient workbook can be processed.
+- Every successful recipient gets a four-page PDF.
+- Invalid rows do not stop unrelated records.
+- Duplicate filenames are handled.
+- ZIP downloads correctly.
+- Generated PDFs contain the intended names.
+
+---
+
+## PHASE 7 — Security & Reliability
+
+### Tasks
+
+1. Add rate limiting.
+2. Validate request sizes.
+3. Validate Excel uploads.
+4. Enforce field length limits.
+5. Implement safe filenames.
+6. Limit concurrent heavy requests.
+7. Sanitize error responses.
+8. Prevent accidental file persistence.
+9. Test malformed input.
+10. Test repeated generation requests.
+
+### Deliverables
+
+- Hardened API.
+- Security tests.
+- Error handling documentation.
+
+### Acceptance Criteria
+
+- Oversized files are rejected.
+- Invalid requests return appropriate errors.
+- Temporary files are cleaned up.
+- Server remains stable under reasonable concurrent use.
+- Public endpoints do not expose internal files.
+
+---
+
+## PHASE 8 — Render Deployment
+
+### Tasks
+
+1. Prepare `requirements.txt`.
+2. Prepare `render.yaml`.
+3. Verify the production startup command.
+4. Ensure application binds to the Render-provided port.
+5. Bundle the PDF and compatible fonts.
+6. Configure the GitHub repository.
+7. Deploy to Render.
+8. Verify public HTTPS access.
+9. Test PDF generation in the Linux environment.
+10. Test browser downloads.
+
+### Deliverables
+
+- Render deployment configuration.
+- Public application URL.
+- Deployment documentation.
+
+### Acceptance Criteria
+
+- Website opens from mobile.
+- PDF template loads correctly.
+- Fonts render correctly on Render.
+- Single generation works.
+- Bulk generation works within tested resource limits.
+- Downloads function correctly.
+
+---
+
+## PHASE 9 — Final Quality Assurance
+
+Test at least the following scenarios:
+
+### Single Entry Tests
+
+- Short Hindi name.
+- Long Hindi name.
+- English name.
+- Mixed-language name.
+- Two-person name.
+- Designation in second line.
+- Second line empty.
+- City empty.
+- Both optional fields empty.
+- Long second line.
+- Special Unicode characters.
+
+### Bulk Tests
+
+- 1 recipient.
+- 10 recipients.
+- 100 recipients.
+- Duplicate names.
+- Blank rows.
+- Missing required column.
+- Empty Name.
+- Invalid workbook.
+- Oversized workbook.
+- Long-name overflow warnings.
+
+### PDF Tests
+
+- Exactly four pages.
+- Correct recipient text.
+- Correct font rendering.
+- Correct center alignment.
+- No clipping.
+- No missing glyphs.
+- Original page dimensions preserved.
+- Pages 2–4 visually unchanged.
+
+### Browser Tests
+
+- Android Chrome.
+- iPhone Safari.
+- Desktop Chrome.
+- Desktop Safari.
+- Mobile download fallback.
+- ZIP download.
+
+### Deployment Tests
+
+- Cold start.
+- Warm start.
+- Repeated requests.
+- Concurrent requests.
+- Temporary-file cleanup.
+- 100-record batch performance.
+
+---
+
+# PART 10 — DEFINITION OF DONE
+
+The project is complete only when:
+
+1. The application is deployed to Render.
+2. The public website works on mobile and desktop.
+3. Users can enter recipient details manually.
+4. Hindi and English text render correctly.
+5. Live preview works.
+6. Single PDF generation works.
+7. Automatic download works, with fallback.
+8. Excel bulk generation supports up to 100 recipients.
+9. ZIP download works.
+10. Every invitation contains exactly four pages.
+11. Only the first page is personalized.
+12. Pages 2–4 preserve their original visual appearance.
+13. Recipient names remain unchanged.
+14. Long-name handling works.
+15. Basic security controls are implemented.
+16. No database is required.
+17. No generated files are permanently stored.
+18. The project includes setup and deployment documentation.
+19. Automated tests pass.
+20. The user approves the final generated invitation.
+
+---
+
+# PART 11 — DEVELOPMENT EXECUTION INSTRUCTIONS
+
+When implementing this project:
+
+1. First inspect the existing repository.
+2. Read this PRD completely.
+3. Identify the current implementation phase.
+4. Explain the proposed changes for that phase.
+5. Implement only the approved phase.
+6. Add relevant tests.
+7. Run the tests.
+8. Report completed work.
+9. Report any technical limitations.
+10. Wait for approval before moving to the next phase.
+
+Do not implement all phases in a single unreviewed change.
+
+Maintain a phase-completion checklist in the README.
+
+If the original PDF is unavailable, complete only the infrastructure tasks that do not depend on PDF calibration.
+
+Do not create a substitute invitation design and treat it as the final template.
+
+## Final Instruction
+
+Build a simple, reliable, reusable, mobile-friendly Jain invitation personalization application.
+
+Prioritize:
+
+**PDF preservation → Hindi rendering accuracy → correct recipient formatting → mobile usability → reliable downloads → maintainable code.**
+
+Avoid unnecessary complexity.
+
+Start with Phase 0 only and explain the setup steps for Visual Studio Code before writing implementation code.

@@ -1,0 +1,68 @@
+@font-face {
+  font-family: Invitation;
+  src: url('/api/template/font') format('truetype');
+  font-display: swap;
+}
+:root { color-scheme: light; --maroon: #800020; --ink: #262c2d; --muted: #586366; --teal: #19675d; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; color: var(--ink); background: #f4f7f6; font: 1rem/1.55 Invitation, sans-serif; }
+.site-header, main, footer { max-width: 1200px; margin: auto; padding: 1.25rem; }
+.site-header { padding-bottom: .25rem; }
+.eyebrow { color: var(--maroon); font-family: Invitation, sans-serif; margin: 0; }
+h1 { font: 2rem/1.25 Georgia, serif; margin: .5rem 0; }
+h2 { font-size: 1.2rem; margin: 0 0 .75rem; }
+p { margin: .5rem 0 1rem; }
+.site-header > p:last-child, small, footer, .optional { color: var(--muted); }
+.mode-switch { display: flex; gap: .5rem; margin-bottom: 1rem; }
+button, .button-link { min-height: 46px; border: 1px solid var(--maroon); border-radius: .5rem; padding: .7rem 1rem; font: inherit; font-weight: 600; cursor: pointer; color: white; background: var(--maroon); text-align: center; text-decoration: none; }
+.mode-switch button { flex: 1; }
+.mode-switch button[aria-pressed="false"], .secondary { color: var(--maroon); background: white; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+:focus-visible { outline: 3px solid #146d96; outline-offset: 3px; }
+.workspace { display: grid; gap: 1rem; }
+.workspace > *, .card { min-width: 0; }
+.card { padding: 1.25rem; background: white; border-radius: 8px; }
+.preview-card { padding: 0; background: transparent; border-radius: 0; }
+label { display: block; font-weight: 600; margin: 1rem 0 .35rem; }
+input { width: 100%; min-width: 0; min-height: 48px; border: 1px solid #9a8a93; border-radius: .4rem; padding: .65rem; font: 16px/1.5 Invitation, sans-serif; }
+small { display: block; margin-top: .35rem; }
+.note { border-left: 2px solid var(--teal); padding: .25rem .75rem; font-size: .9rem; margin-top: 1rem; }
+.actions { display: grid; gap: .65rem; }
+#error, .error-state { color: #a01919; background: #fff1ef; padding: .75rem; border-radius: .4rem; overflow-wrap: anywhere; }
+#status { font-size: .9rem; margin-top: 1rem; }
+.download-panel { padding: .85rem 0; border-top: 2px solid var(--teal); }
+.download-panel a { display: block; margin: .65rem 0; overflow-wrap: anywhere; }
+a { color: var(--maroon); }
+.preview-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .3rem; }
+#preview-kind { font-size: .8rem; color: var(--muted); }
+#preview-help { font-size: .9rem; }
+.preview-stage { position: relative; width: 100%; line-height: 0; background: #f4f1ee; }
+.preview-stage img { display: block; width: 100%; height: auto; }
+#text-overlay, #exact-image, .page-overlay { position: absolute; inset: 0; width: 100%; height: 100%; }
+#text-overlay { pointer-events: none; }
+.bulk-actions { margin-top: 1rem; }
+input[type="file"] { font-family: inherit; padding: .65rem .35rem; }
+select { width: 100%; min-width: 0; min-height: 46px; font: inherit; background: white; border: 1px solid #9a8a93; border-radius: 6px; padding: .5rem; }
+.sample-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.bulk-stage { margin-top: 1rem; }
+.batch-summary { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .4rem 1rem; padding-top: 1rem; border-top: 1px solid #c9d8d3; }
+.batch-summary dt { color: var(--muted); }
+.batch-summary dd { margin: 0; font-weight: 600; }
+#bulk-issue-list { padding-left: 1.25rem; font-size: .9rem; max-height: 18rem; overflow-y: auto; overflow-wrap: anywhere; }
+#bulk-issue-list li { margin-bottom: .6rem; }
+h3 { font-size: 1rem; }
+footer { font-size: .85rem; text-align: center; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+@media (min-width: 850px) {
+  .workspace { grid-template-columns: minmax(300px, .8fr) minmax(0, 1.2fr); align-items: start; }
+  .mode-switch { max-width: 440px; }
+}
+@media (max-width: 400px) {
+  h1 { font-size: 1.6rem; }
+  .site-header, main, footer { padding: 1rem; }
+  .card { padding: 1rem; }
+  .preview-card { padding: 0; }
+  .mode-switch button { padding: .65rem .5rem; font-size: .9rem; }
+}
+@media (prefers-reduced-motion: no-preference) { button { transition: background .15s; } }

@@ -1,0 +1,1 @@
+"""Mohangarh Sidhchakra 2026 Invitation application"""

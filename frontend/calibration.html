@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Template Calibration | Jain Invitation Personalizer</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #242424; background: #f3f4f2; font-family: Georgia, serif; letter-spacing: 0; }
+    header { max-width: 850px; margin: auto; padding: 24px 16px 16px; }
+    h1 { font-size: 24px; margin: 0 0 12px; }
+    .metadata { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; font-size: 15px; }
+    label { display: flex; align-items: center; gap: 6px; }
+    input { accent-color: #16714a; }
+    output { display: block; margin-top: 12px; font-size: 14px; overflow-wrap: anywhere; }
+    main { max-width: 850px; margin: 0 auto 32px; padding: 0 16px; }
+    figure { position: relative; margin: 0; }
+    img { display: block; width: 100%; height: auto; }
+    #bounds { position: absolute; border: 2px dashed #087448; background: rgb(0 140 80 / 8%); pointer-events: none; }
+    #error { color: #a41428; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Jain Invitation Personalizer</h1>
+    <div class="metadata">
+      <span>Phase 1 calibration</span>
+      <span id="placement-status" role="status">Loading placement status</span>
+      <label><input id="outline" type="checkbox" checked>Recipient area</label>
+    </div>
+    <output id="measurements" aria-live="polite"></output>
+    <p id="error" role="alert" hidden></p>
+  </header>
+  <main>
+    <figure>
+      <img id="preview" src="/api/template/preview" alt="Original first invitation page" width="971" height="1363">
+      <div id="bounds" hidden></div>
+    </figure>
+  </main>
+  <script>
+    const bounds = document.getElementById('bounds');
+    const outline = document.getElementById('outline');
+    const error = document.getElementById('error');
+    let loaded = false;
+    outline.addEventListener('change', () => { bounds.hidden = !loaded || !outline.checked; });
+    document.getElementById('preview').addEventListener('error', () => {
+      error.textContent = 'Original template preview is unavailable.';
+      error.hidden = false;
+    });
+    fetch('/api/template/layout').then(async response => {
+      if (!response.ok) throw new Error('Layout unavailable');
+      return response.json();
+    }).then(layout => {
+      document.getElementById('placement-status').textContent =
+        layout.status === 'placement_approved' ? 'Placement approved' : 'Placement pending approval';
+      const box = layout.text_box;
+      bounds.style.left = `${box.x * 100}%`;
+      bounds.style.top = `${box.y * 100}%`;
+      bounds.style.width = `${box.width * 100}%`;
+      bounds.style.height = `${box.height * 100}%`;
+      const points = layout.pdf_text_box;
+      document.getElementById('measurements').textContent =
+        `Page 1: ${layout.page_width.toFixed(2)} x ${layout.page_height.toFixed(2)} pt | Draft area: x ${points.x}, y ${points.y}, ${points.width} x ${points.height} pt`;
+      loaded = true;
+      bounds.hidden = !outline.checked;
+    }).catch(() => {
+      error.textContent = 'Template calibration could not be loaded.';
+      error.hidden = false;
+    });
+  </script>
+</body>
+</html>
