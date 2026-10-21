@@ -2,7 +2,25 @@
 
 Date: 2026-10-20. Phase 1 status: **complete; user approved placement on 2026-10-20**.
 
-## Source integrity
+## Template revision verified on 2026-10-21
+
+The user replaced `assets/invitation.pdf`. Its current SHA-256 is
+`9c532d4ffc121b62116e5849726b8ff72a99605cf9490ce6f0d787662857fb99`.
+Compared with the original template in commit `5bfa815`, Pages 1, 3, and 4
+render identically at 144 dpi. The recipient area also renders identically
+at 216 dpi. Page 1 geometry and rotation are unchanged, so the approved
+16 pt placement and all layout coordinates remain unchanged.
+
+The replacement affects Page 2, whose dimensions are now 485.02 x 729.04 pt
+(previously 614.03 x 907.05 pt). The template still contains four pages,
+all with zero rotation. Its actual per-page dimensions are preserved; the
+PDF has not been rewritten or resized. The current exact metadata is in
+`config/template-inspection.json`. The startup checksum safeguard remains
+enabled and is bound to this verified revision.
+
+The remaining inspection notes describe the historical original template.
+
+## Source integrity (original template)
 
 The uploaded original was copied without alteration from `assets/fonts/invitation.pdf`
 to the PRD's expected path, `assets/invitation.pdf`. Both retain this SHA-256:
